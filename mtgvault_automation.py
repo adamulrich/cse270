@@ -1,5 +1,4 @@
 # pip install selenium
-
 from selenium import webdriver
 import unittest
 from selenium.webdriver.common.by import By
