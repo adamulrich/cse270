@@ -253,7 +253,7 @@ class test_mtg_vault_card_search(unittest.TestCase):
             card_set_filter= "All Sets"
         )
 
-        self.search_helper(search,72)
+        self.search_helper(search,73)
 
 
     def test_2_text_color_white(self):
