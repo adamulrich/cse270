@@ -6,6 +6,9 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+
+
 import time
 
 class SearchParams():
@@ -75,14 +78,18 @@ class test_mtg_vault_card_search(unittest.TestCase):
 
         options = webdriver.ChromeOptions()
 
+        caps = DesiredCapabilities().CHROME
+
+        caps["pageLoadStrategy"] = "eager"
+
         options.add_experimental_option('excludeSwitches', ['enable-logging'])
 
-        self.browser = webdriver.Chrome(
+        self.browser = webdriver.Chrome(desired_capabilities=caps,
              options=options)
 
     def loadElements(self):
         self.browser.get('https://www.mtgvault.com/cards/search/')
-        time.sleep(0.5)
+        time.sleep(0)
 
         
         self.search_textbox = self.browser.find_element(By.ID, 'ctl00_ContentPlaceHolder1_TextBox_SearchTerm')
@@ -212,22 +219,23 @@ class test_mtg_vault_card_search(unittest.TestCase):
 
         # now search, wait a second for the results
         self.search_button.click()
-        time.sleep(1)
-
-
 
         # try to get the result count
-        element = None
-        try:
+        elements = []
+        count =  0
             
             # get the html element
-            element = self.browser.find_element(By.XPATH, "/html/body/form/div[4]/div[2]/div[3]/p")
+        while len(elements) ==0 and count < 5:
+            time.sleep(1)
+            count += 1
+            elements = self.browser.find_elements(By.XPATH, "/html/body/form/div[4]/div[2]/div[3]/p")
             
-        except:
-            # if we failed to find, assert 
+        if len(elements) == 0:        
             self.assertTrue(False,"could not find result count")
+            return
 
-        result_count = eval(element.text.split(" ")[1])
+        else:
+            result_count = eval(elements[0].text.split(" ")[1])
 
         self.assertEqual(result_count, expected_count, "expected count not equal")
 
