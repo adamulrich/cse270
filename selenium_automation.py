@@ -26,7 +26,7 @@ class TestCalculator(unittest.TestCase):
         self.plus_button = self.browser.find_element(By.ID,"plus")
         self.minus_button = self.browser.find_element(By.ID,"minus")
         self.multiply_button = self.browser.find_element(By.ID,"multiply")
-        self.divide_button = self.browser.find_element(By.ID,"divide")
+        self.divide_button =self.browser.find_element(By.ID,"divide")
         self.equals_button = self.browser.find_element(By.ID,"equals")
         self.main_display = self.browser.find_element(By.ID,"display")
         self.plus_minus_button = self.browser.find_element(By.ID,"plus_minus")
