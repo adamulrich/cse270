@@ -72,12 +72,17 @@ class SearchParams():
 class test_mtg_vault_card_search(unittest.TestCase):
 
     def setUp(self):
-        self.browser = webdriver.Chrome()      
-        # self.addCleanup(self.browser.refresh)  
+
+        options = webdriver.ChromeOptions()
+
+        options.add_experimental_option('excludeSwitches', ['enable-logging'])
+
+        self.browser = webdriver.Chrome(
+             options=options)
 
     def loadElements(self):
         self.browser.get('https://www.mtgvault.com/cards/search/')
-        time.sleep(3)
+        time.sleep(0.5)
 
         
         self.search_textbox = self.browser.find_element(By.ID, 'ctl00_ContentPlaceHolder1_TextBox_SearchTerm')
@@ -121,6 +126,8 @@ class test_mtg_vault_card_search(unittest.TestCase):
 
 
     def search_helper(self, search_params: SearchParams, expected_count):
+
+        self.loadElements()
         
         if search_params.search_text != "":
             self.search_textbox.send_keys(search_params.search_text)
@@ -203,16 +210,22 @@ class test_mtg_vault_card_search(unittest.TestCase):
         if search_params.toughness_value != "":
             self.toughness_value_dropdown.select_by_visible_text(search_params.toughness_value)
 
-        # now search
+        # now search, wait a second for the results
         self.search_button.click()
-        time.sleep(3)
+        time.sleep(1)
+
+
+
+        # try to get the result count
+        element = None
         try:
-        
-            element = self.browser.find_element(By.CLASS_NAME, "search-results-count")
+            
+            # get the html element
+            element = self.browser.find_element(By.XPATH, "/html/body/form/div[4]/div[2]/div[3]/p")
             
         except:
-            # else quit
-            pass
+            # if we failed to find, assert 
+            self.assertTrue(False,"could not find result count")
 
         result_count = eval(element.text.split(" ")[1])
 
@@ -220,8 +233,6 @@ class test_mtg_vault_card_search(unittest.TestCase):
 
 
     def test_1_text_search(self):
-
-        self.loadElements()
 
         search = SearchParams(
             search_text="mill", 
@@ -235,8 +246,6 @@ class test_mtg_vault_card_search(unittest.TestCase):
 
     def test_2_text_color_white(self):
 
-        self.loadElements()
-
         search = SearchParams(
             search_text="vigilance", 
             color_white=True, 
@@ -247,8 +256,6 @@ class test_mtg_vault_card_search(unittest.TestCase):
         self.search_helper(search,456)
 
     def test_3_exclude_color_exile_instant(self):
-
-        self.loadElements()
 
         search = SearchParams(
             
@@ -263,8 +270,6 @@ class test_mtg_vault_card_search(unittest.TestCase):
 
     def test_4_green_power_greater_equal_10(self):
 
-        self.loadElements()
-
         search = SearchParams(
             
             color_green=True,
@@ -276,8 +281,6 @@ class test_mtg_vault_card_search(unittest.TestCase):
         self.search_helper(search,25)
 
     def test_5_no_color_toughness_less_than_or_equqal_1(self):
-
-        self.loadElements()
 
         search = SearchParams(
             
@@ -291,8 +294,6 @@ class test_mtg_vault_card_search(unittest.TestCase):
 
     def test_6_rare_no_color_filter_cmc_equals_0(self):
 
-        self.loadElements()
-
         search = SearchParams(
             rarity_rare=True,
             color_exclude_unselected=True,
@@ -303,8 +304,5 @@ class test_mtg_vault_card_search(unittest.TestCase):
         self.search_helper(search,42)
 
 
-
-
 if __name__ == '__main__':
-    unittest.main(verbosity=2)
-
+    unittest.main(verbosity=2, warnings='ignore')
