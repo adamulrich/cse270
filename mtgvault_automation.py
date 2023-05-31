@@ -70,8 +70,6 @@ class SearchParams():
         self.card_legality = card_legality
         self.card_set_filter = card_set_filter
 
-
-
 class test_mtg_vault_card_search(unittest.TestCase):
 
     def setUp(self):
@@ -84,9 +82,11 @@ class test_mtg_vault_card_search(unittest.TestCase):
         caps = DesiredCapabilities().CHROME
         caps["pageLoadStrategy"] = "eager"
 
+        #create webdriver
         self.browser = webdriver.Chrome(desired_capabilities=caps,
              options=options)
 
+    # identifies html elements
     def loadElements(self):
         self.browser.get('https://www.mtgvault.com/cards/search/')
         
@@ -123,13 +123,14 @@ class test_mtg_vault_card_search(unittest.TestCase):
         self.rare_checkbox = self.browser.find_element(By.ID, 'ctl00_ContentPlaceHolder1_CheckBox_Rarity_Rare')       
         self.mythic_checkbox = self.browser.find_element(By.ID, 'ctl00_ContentPlaceHolder1_CheckBox_Rarity_MythicRare')       
 
-
         self.card_type_dropdown = Select(self.browser.find_element(By.ID, 'ctl00_ContentPlaceHolder1_DropDownList_Type'))
         self.card_legality_dropdown = Select(self.browser.find_element(By.ID, 'ctl00_ContentPlaceHolder1_DropDownList_Legality')) 
 
         self.card_set_filter_listbox = Select(self.browser.find_element(By.ID, 'ctl00_ContentPlaceHolder1_ExtendedListBox_Expansions'))
 
-
+    # search test helper. 
+    # this function will drive the UI based on the search_params object,
+    # then will confirm the result count == expected count
     def search_helper(self, search_params: SearchParams, expected_count):
 
         self.loadElements()
@@ -234,6 +235,7 @@ class test_mtg_vault_card_search(unittest.TestCase):
                 count += 1
                 time.sleep(1)
 
+        # if we never found the right element, assert
         if len(elements) == 0:        
             self.assertTrue(False,"could not find result count")
             return
@@ -241,9 +243,15 @@ class test_mtg_vault_card_search(unittest.TestCase):
         else:
             result_count = eval(elements[0].text.split(" ")[1])
 
+        #check count
         self.assertEqual(result_count, expected_count, "expected count not equal")
 
 
+    # set text = mill
+    # check color blue
+    # select search type text
+    # select all sets
+    # should return 73
     def test_1_text_search(self):
 
         search = SearchParams(
@@ -255,7 +263,11 @@ class test_mtg_vault_card_search(unittest.TestCase):
 
         self.search_helper(search,73)
 
-
+    # set text = vigilance
+    # check color white
+    # select search type text
+    # select card set to All Sets
+    # should return 456
     def test_2_text_color_white(self):
 
         search = SearchParams(
@@ -267,6 +279,12 @@ class test_mtg_vault_card_search(unittest.TestCase):
 
         self.search_helper(search,456)
 
+    # check exclude unselected
+    # select card type = "Instant"
+    # select search type = "Text"
+    # set text search = "exile"
+    # select card set to All Sets
+    # should return 3
     def test_3_exclude_color_exile_instant(self):
 
         search = SearchParams(
@@ -280,6 +298,11 @@ class test_mtg_vault_card_search(unittest.TestCase):
 
         self.search_helper(search,3)
 
+    # check color green
+    # set power operator to '>='
+    # set power value to '10'
+    # select card set to All Sets
+    # should return 25
     def test_4_green_power_greater_equal_10(self):
 
         search = SearchParams(
@@ -292,6 +315,10 @@ class test_mtg_vault_card_search(unittest.TestCase):
 
         self.search_helper(search,25)
 
+    # check exclude unselected
+    # set toughness operator to '<='
+    # set toughness value to '1'
+    # should return 247
     def test_5_no_color_toughness_less_than_or_equqal_1(self):
 
         search = SearchParams(
@@ -303,6 +330,11 @@ class test_mtg_vault_card_search(unittest.TestCase):
 
         self.search_helper(search,247)
 
+    # check rarity rare
+    # check exclude unselected
+    # set cmc operator to '='
+    # set cmc value to '0'
+    # should return 42
     def test_6_rare_no_color_filter_cmc_equals_0(self):
 
         search = SearchParams(
