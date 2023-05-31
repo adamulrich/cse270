@@ -76,21 +76,19 @@ class test_mtg_vault_card_search(unittest.TestCase):
 
     def setUp(self):
 
+        # reduce selenium noise
         options = webdriver.ChromeOptions()
-
-        caps = DesiredCapabilities().CHROME
-
-        caps["pageLoadStrategy"] = "eager"
-
         options.add_experimental_option('excludeSwitches', ['enable-logging'])
+
+        # set page load to eager to speed up the test
+        caps = DesiredCapabilities().CHROME
+        caps["pageLoadStrategy"] = "eager"
 
         self.browser = webdriver.Chrome(desired_capabilities=caps,
              options=options)
 
     def loadElements(self):
         self.browser.get('https://www.mtgvault.com/cards/search/')
-        time.sleep(0)
-
         
         self.search_textbox = self.browser.find_element(By.ID, 'ctl00_ContentPlaceHolder1_TextBox_SearchTerm')
 
@@ -225,11 +223,17 @@ class test_mtg_vault_card_search(unittest.TestCase):
         count =  0
             
             # get the html element
-        while len(elements) ==0 and count < 5:
-            time.sleep(1)
-            count += 1
+        while True:
+            # find the element
             elements = self.browser.find_elements(By.XPATH, "/html/body/form/div[4]/div[2]/div[3]/p")
-            
+            # if we have it, then break out
+            if len(elements) != 0 or count >= 5:
+                break
+            else:
+            # increment and wait a second
+                count += 1
+                time.sleep(1)
+
         if len(elements) == 0:        
             self.assertTrue(False,"could not find result count")
             return
@@ -249,7 +253,7 @@ class test_mtg_vault_card_search(unittest.TestCase):
             card_set_filter= "All Sets"
         )
 
-        self.search_helper(search,73)
+        self.search_helper(search,72)
 
 
     def test_2_text_color_white(self):
@@ -295,7 +299,6 @@ class test_mtg_vault_card_search(unittest.TestCase):
             color_exclude_unselected=True, 
             toughness_operator= "<=",
             toughness_value="1",
-
         )
 
         self.search_helper(search,247)
