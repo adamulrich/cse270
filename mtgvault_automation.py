@@ -251,7 +251,7 @@ class test_mtg_vault_card_search(unittest.TestCase):
     # select search type text
     # select all sets
     # should return 73
-    def test_1_text_search(self):
+    def test_01_text_search(self):
 
         search = SearchParams(
             search_text="mill", 
@@ -267,7 +267,7 @@ class test_mtg_vault_card_search(unittest.TestCase):
     # select search type text
     # select card set to All Sets
     # should return 456
-    def test_2_text_color_white(self):
+    def test_02_text_color_white(self):
 
         search = SearchParams(
             search_text="vigilance", 
@@ -284,7 +284,7 @@ class test_mtg_vault_card_search(unittest.TestCase):
     # set text search = "exile"
     # select card set to All Sets
     # should return 3
-    def test_3_exclude_color_exile_instant(self):
+    def test_03_exclude_color_exile_instant(self):
 
         search = SearchParams(
             
@@ -302,7 +302,7 @@ class test_mtg_vault_card_search(unittest.TestCase):
     # set power value to '10'
     # select card set to All Sets
     # should return 25
-    def test_4_green_power_greater_equal_10(self):
+    def test_04_green_power_greater_equal_10(self):
 
         search = SearchParams(
             
@@ -318,7 +318,7 @@ class test_mtg_vault_card_search(unittest.TestCase):
     # set toughness operator to '<='
     # set toughness value to '1'
     # should return 247
-    def test_5_no_color_toughness_less_than_or_equqal_1(self):
+    def test_05_no_color_toughness_less_than_or_equqal_1(self):
 
         search = SearchParams(
             
@@ -334,7 +334,7 @@ class test_mtg_vault_card_search(unittest.TestCase):
     # set cmc operator to '='
     # set cmc value to '0'
     # should return 42
-    def test_6_rare_no_color_filter_cmc_equals_0(self):
+    def test_06_rare_no_color_filter_cmc_equals_0(self):
 
         search = SearchParams(
             rarity_rare=True,
@@ -344,6 +344,88 @@ class test_mtg_vault_card_search(unittest.TestCase):
         )
 
         self.search_helper(search,42)
+    
+    # check rarity rare
+    # check rarity mythic
+    # select card set MOM: Aftermath
+    # should return 35
+    def test_07_multi_rarity(self):
+        
+        search = SearchParams(
+            rarity_rare=True,
+            rarity_mythic=True,
+            card_set_filter= "March of the Machine: The Aftermath"
+        )
+
+        self.search_helper(search,35)
+
+    # check exclude unselected
+    # check multicolor
+    # select legal in standard
+    # should return 253
+    def test_08_standard_legal(self):
+
+        search = SearchParams(
+            color_exclude_unselected=True,
+            color_multicolor=True,
+            card_legality="Legal in Standard"
+        )
+
+        self.search_helper(search,253)
+
+    # set text = ally
+    # select search type text
+    # should return 96
+    def test_09_ally(self):
+
+        search = SearchParams(
+            search_text="ally",
+            search_type_type=True
+        )
+
+        self.search_helper(search,96)
+
+    # set text = obedience
+    # select flavor text type
+    # should return 6
+    def test_10_obedience_flavor_text(self):
+
+        search = SearchParams(
+            search_text="obedience",
+            search_type_flavor_text=True
+        )
+
+        self.search_helper(search,6)
+
+    # set text = john matson
+    # select artist text type
+    # should return 106
+    def test_11_artist(self):
+
+        search = SearchParams(
+            search_text="john matson",
+            search_type_artist_text=True
+        )
+
+        self.search_helper(search,106)
+
+    # check rarity rare
+    # check rarity uncommon
+    # set cmc operator to "="
+    # set cmc value to "X"
+    # should return 61
+    def test_12_rare_uncommon_CMC_X(self):
+
+        search = SearchParams(
+            rarity_rare=True,
+            rarity_uncommon=True,
+            cmc_operator="=",
+            cmc_value="X"
+        )
+
+        self.search_helper(search,61)
+
+
 
 
 if __name__ == '__main__':
