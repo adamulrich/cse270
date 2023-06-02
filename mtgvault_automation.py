@@ -344,6 +344,88 @@ class test_mtg_vault_card_search(unittest.TestCase):
         )
 
         self.search_helper(search,42)
+    
+    # check rarity rare
+    # check rarity mythic
+    # select card set MOM: Aftermath
+    # should return 10
+    def test_7_multi_rarity(self):
+        
+        search = SearchParams(
+            rarity_rare=True,
+            rarity_mythic=True,
+            card_set_filter= "March of the Machine: The Aftermath"
+        )
+
+        self.search_helper(search,10)
+
+    # check exclude unselected
+    # check multicolor
+    # select legal in standard
+    # should return 253
+    def test_8_standard_legal(self):
+
+        search = SearchParams(
+            color_exclude_unselected=True,
+            color_multicolor=True,
+            card_legality="Legal in Standard"
+        )
+
+        self.search_helper(search,253)
+
+    # set text = ally
+    # select search type text
+    # should return 96
+    def test_9_ally(self):
+
+        search = SearchParams(
+            search_text="ally",
+            search_type_text=True
+        )
+
+        self.search_helper(search,96)
+
+    # set text = obedience
+    # select flavor text type
+    # should return 6
+    def test_10_obedience_flavor_text(self):
+
+        search = SearchParams(
+            search_text="obedience",
+            search_type_flavor_text=True
+        )
+
+        self.search_helper(search,6)
+
+    # set text = john matson
+    # select artist text type
+    # should return 106
+    def test_11_artist(self):
+
+        search = SearchParams(
+            search_text="john matson",
+            search_type_artist_text=True
+        )
+
+        self.search_helper(search,106)
+
+    # check rarity rare
+    # check rarity uncommon
+    # set cmc operator to "="
+    # set cmc value to "X"
+    # should return 61
+    def test_12_rare_uncommon_CMC_X(self):
+
+        search = SearchParams(
+            rarity_rare=True,
+            rarity_uncommon=True,
+            cmc_operator="=",
+            cmc_value="X"
+        )
+
+        self.search_helper(search,61)
+
+
 
 
 if __name__ == '__main__':
