@@ -3,7 +3,7 @@
 from selenium import webdriver
 import unittest
 from selenium.webdriver.common.by import By
-
+import time
 
 class TestCalculator(unittest.TestCase):
 
@@ -12,7 +12,13 @@ class TestCalculator(unittest.TestCase):
         # self.addCleanup(self.browser.refresh)  
 
     def loadElements(self):
-        self.browser.get('https://adamulrich.github.io/javascript_calculator/')
+
+        # test javascript implementation
+        #self.browser.get('https://adamulrich.github.io/javascript_calculator/')
+
+        # test typescript implementation
+        self.browser.get('https://adamulrich.github.io/typescript-calculator/public/index.html')
+
         self.one_button = self.browser.find_element(By.ID, "1")
         self.two_button = self.browser.find_element(By.ID,"2")
         self.three_button = self.browser.find_element(By.ID,"3")
@@ -35,32 +41,83 @@ class TestCalculator(unittest.TestCase):
         self.all_clear_button = self.browser.find_element(By.ID,"all_clear")
         self.back_button = self.browser.find_element(By.ID,"backspace")
 
+        self.buttons = {
+            "1": self.one_button,
+            "2": self.two_button,
+            "3": self.three_button,
+            "4": self.four_button,
+            "5": self.five_button,
+            "6": self.six_button,
+            "7": self.seven_button,
+            "8": self.eight_button,
+            "9": self.nine_button,
+            "0": self.zero_button,
+            ".": self.decimal_button,
+            "/": self.divide_button,
+            "*": self.multiply_button,
+            "+": self.plus_button,
+            "-": self.minus_button,
+            "=": self.equals_button,
+            "<": self.back_button,
+            "C": self.clear_button,
+            "A": self.all_clear_button,
+            "±": self.plus_minus_button
+        }
 
     def test_addition(self):
-        self.loadElements()
-
-        self.one_button.click()
-        self.two_button.click()
-        self.seven_button.click()
-
-        self.plus_button.click()
-
-        self.two_button.click()
-        self.five_button.click()
-        self.five_button.click()
-
-        self.equals_button.click()
-
-        self.assertIn(self.main_display.text,'382', "main display is not equal to 382; it is " + self.main_display.text)
-
+        self.computation_helper("127+255=","382")
 
     def test_negative_number(self):
+        self.computation_helper("3±", "-3")
+
+    def test_multiplication(self):
+        self.computation_helper("25*25=", "625")
+
+    def test_division(self):
+        self.computation_helper("25/2=", "12.5")
+
+    def test_clear(self):
+        self.computation_helper("25/2C5=", "5")
+
+    def test_clear_new_operand(self):
+        self.computation_helper("25/2C*5=", "125")
+    
+    def test_allclear(self):
+        self.computation_helper("25*5=A", "0")
+
+    def test_backspace(self):
+        self.computation_helper("50+500<=", "100")
+
+    def test_multiply_negative(self):
+        self.computation_helper("127±*127=","-16129")
+
+    def test_divide_two_negatives(self):
+        self.computation_helper("12±/3=","-4")
+
+    def test_add_twelve_digit_numbers(self):
+        self.computation_helper("123456789012+123456789012=","246913578024")
+    
+    def test_add_string_of_digits(self):
+        self.computation_helper("1+2+3+4=","10")
+
+    def test_complex_calculation(self):
+        self.computation_helper("34/17+5*10-1=","69")
+
+
+
+
+    def computation_helper(self, expression, result):
+        
         self.loadElements()
 
-        self.three_button.click()
-        self.plus_minus_button.click()
+        for button in expression:
+            self.buttons[button].click()
+            time.sleep(0.1)
+        
+        
+        self.assertEqual(self.main_display.text,result, f"main display is not equal to {result}.")
+        
 
-        self.assertIn(self.main_display.text,'-3', "main display is not equal to -3; it is " + self.main_display.text)
 
 
 if __name__ == '__main__':
