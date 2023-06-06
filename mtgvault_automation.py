@@ -1,11 +1,13 @@
 # pip install selenium
-
 from selenium import webdriver
 import unittest
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+
+
 import time
 
 class SearchParams():
@@ -67,18 +69,25 @@ class SearchParams():
         self.card_legality = card_legality
         self.card_set_filter = card_set_filter
 
-
-
 class test_mtg_vault_card_search(unittest.TestCase):
 
     def setUp(self):
-        self.browser = webdriver.Chrome()      
-        # self.addCleanup(self.browser.refresh)  
 
+        # reduce selenium noise
+        options = webdriver.ChromeOptions()
+        options.add_experimental_option('excludeSwitches', ['enable-logging'])
+
+        # set page load to eager to speed up the test
+        caps = DesiredCapabilities().CHROME
+        caps["pageLoadStrategy"] = "eager"
+
+        #create webdriver
+        self.browser = webdriver.Chrome(desired_capabilities=caps,
+             options=options)
+
+    # identifies html elements
     def loadElements(self):
         self.browser.get('https://www.mtgvault.com/cards/search/')
-        time.sleep(3)
-
         
         self.search_textbox = self.browser.find_element(By.ID, 'ctl00_ContentPlaceHolder1_TextBox_SearchTerm')
 
@@ -113,14 +122,17 @@ class test_mtg_vault_card_search(unittest.TestCase):
         self.rare_checkbox = self.browser.find_element(By.ID, 'ctl00_ContentPlaceHolder1_CheckBox_Rarity_Rare')       
         self.mythic_checkbox = self.browser.find_element(By.ID, 'ctl00_ContentPlaceHolder1_CheckBox_Rarity_MythicRare')       
 
-
         self.card_type_dropdown = Select(self.browser.find_element(By.ID, 'ctl00_ContentPlaceHolder1_DropDownList_Type'))
         self.card_legality_dropdown = Select(self.browser.find_element(By.ID, 'ctl00_ContentPlaceHolder1_DropDownList_Legality')) 
 
         self.card_set_filter_listbox = Select(self.browser.find_element(By.ID, 'ctl00_ContentPlaceHolder1_ExtendedListBox_Expansions'))
 
-
+    # search test helper. 
+    # this function will drive the UI based on the search_params object,
+    # then will confirm the result count == expected count
     def search_helper(self, search_params: SearchParams, expected_count):
+
+        self.loadElements()
         
         if search_params.search_text != "":
             self.search_textbox.send_keys(search_params.search_text)
@@ -203,25 +215,43 @@ class test_mtg_vault_card_search(unittest.TestCase):
         if search_params.toughness_value != "":
             self.toughness_value_dropdown.select_by_visible_text(search_params.toughness_value)
 
-        # now search
+        # now search, wait a second for the results
         self.search_button.click()
-        time.sleep(3)
-        try:
-        
-            element = self.browser.find_element(By.CLASS_NAME, "search-results-count")
+
+        # try to get the result count
+        elements = []
+        count =  0
             
-        except:
-            # else quit
-            pass
+            # get the html element
+        while True:
+            # find the element
+            elements = self.browser.find_elements(By.XPATH, "/html/body/form/div[4]/div[2]/div[3]/p")
+            # if we have it, then break out
+            if len(elements) != 0 or count >= 5:
+                break
+            else:
+            # increment and wait a second
+                count += 1
+                time.sleep(1)
 
-        result_count = eval(element.text.split(" ")[1])
+        # if we never found the right element, assert
+        if len(elements) == 0:        
+            self.assertTrue(False,"could not find result count")
+            return
 
+        else:
+            result_count = eval(elements[0].text.split(" ")[1])
+
+        #check count
         self.assertEqual(result_count, expected_count, "expected count not equal")
 
 
-    def test_1_text_search(self):
-
-        self.loadElements()
+    # set text = mill
+    # check color blue
+    # select search type text
+    # select all sets
+    # should return 73
+    def test_01_text_search(self):
 
         search = SearchParams(
             search_text="mill", 
@@ -232,10 +262,12 @@ class test_mtg_vault_card_search(unittest.TestCase):
 
         self.search_helper(search,73)
 
-
-    def test_2_text_color_white(self):
-
-        self.loadElements()
+    # set text = vigilance
+    # check color white
+    # select search type text
+    # select card set to All Sets
+    # should return 456
+    def test_02_text_color_white(self):
 
         search = SearchParams(
             search_text="vigilance", 
@@ -246,9 +278,13 @@ class test_mtg_vault_card_search(unittest.TestCase):
 
         self.search_helper(search,456)
 
-    def test_3_exclude_color_exile_instant(self):
-
-        self.loadElements()
+    # check exclude unselected
+    # select card type = "Instant"
+    # select search type = "Text"
+    # set text search = "exile"
+    # select card set to All Sets
+    # should return 3
+    def test_03_exclude_color_exile_instant(self):
 
         search = SearchParams(
             
@@ -261,9 +297,12 @@ class test_mtg_vault_card_search(unittest.TestCase):
 
         self.search_helper(search,3)
 
-    def test_4_green_power_greater_equal_10(self):
-
-        self.loadElements()
+    # check color green
+    # set power operator to '>='
+    # set power value to '10'
+    # select card set to All Sets
+    # should return 25
+    def test_04_green_power_greater_equal_10(self):
 
         search = SearchParams(
             
@@ -275,23 +314,27 @@ class test_mtg_vault_card_search(unittest.TestCase):
 
         self.search_helper(search,25)
 
-    def test_5_no_color_toughness_less_than_or_equqal_1(self):
-
-        self.loadElements()
+    # check exclude unselected
+    # set toughness operator to '<='
+    # set toughness value to '1'
+    # should return 247
+    def test_05_no_color_toughness_less_than_or_equqal_1(self):
 
         search = SearchParams(
             
             color_exclude_unselected=True, 
             toughness_operator= "<=",
             toughness_value="1",
-
         )
 
         self.search_helper(search,247)
 
-    def test_6_rare_no_color_filter_cmc_equals_0(self):
-
-        self.loadElements()
+    # check rarity rare
+    # check exclude unselected
+    # set cmc operator to '='
+    # set cmc value to '0'
+    # should return 42
+    def test_06_rare_no_color_filter_cmc_equals_0(self):
 
         search = SearchParams(
             rarity_rare=True,
@@ -301,10 +344,89 @@ class test_mtg_vault_card_search(unittest.TestCase):
         )
 
         self.search_helper(search,42)
+    
+    # check rarity rare
+    # check rarity mythic
+    # select card set MOM: Aftermath
+    # should return 35
+    def test_07_multi_rarity(self):
+        
+        search = SearchParams(
+            rarity_rare=True,
+            rarity_mythic=True,
+            card_set_filter= "March of the Machine: The Aftermath"
+        )
+
+        self.search_helper(search,35)
+
+    # check exclude unselected
+    # check multicolor
+    # select legal in standard
+    # should return 253
+    def test_08_standard_legal(self):
+
+        search = SearchParams(
+            color_exclude_unselected=True,
+            color_multicolor=True,
+            card_legality="Legal in Standard"
+        )
+
+        self.search_helper(search,253)
+
+    # set text = ally
+    # select search type text
+    # should return 96
+    def test_09_ally(self):
+
+        search = SearchParams(
+            search_text="ally",
+            search_type_type=True
+        )
+
+        self.search_helper(search,96)
+
+    # set text = obedience
+    # select flavor text type
+    # should return 6
+    def test_10_obedience_flavor_text(self):
+
+        search = SearchParams(
+            search_text="obedience",
+            search_type_flavor_text=True
+        )
+
+        self.search_helper(search,6)
+
+    # set text = john matson
+    # select artist text type
+    # should return 106
+    def test_11_artist(self):
+
+        search = SearchParams(
+            search_text="john matson",
+            search_type_artist_text=True
+        )
+
+        self.search_helper(search,106)
+
+    # check rarity rare
+    # check rarity uncommon
+    # set cmc operator to "="
+    # set cmc value to "X"
+    # should return 61
+    def test_12_rare_uncommon_CMC_X(self):
+
+        search = SearchParams(
+            rarity_rare=True,
+            rarity_uncommon=True,
+            cmc_operator="=",
+            cmc_value="X"
+        )
+
+        self.search_helper(search,61)
 
 
 
 
 if __name__ == '__main__':
-    unittest.main(verbosity=2)
-
+    unittest.main(verbosity=2, warnings='ignore')
